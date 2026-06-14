@@ -5,10 +5,10 @@ WORKDIR /app
 
 # Chromium for live occupancy scraping via Selenium
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
-    chromium-driver \
-    && ln -sf /usr/bin/chromium /usr/bin/google-chrome \
-    && rm -rf /var/lib/apt/lists/*
+  chromium \
+  chromium-driver \
+  && ln -sf /usr/bin/chromium /usr/bin/google-chrome \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -19,10 +19,10 @@ COPY api/ .
 # Retrain inside the image so model.pkl matches the installed sklearn version.
 # Credentials are passed via BuildKit secrets (not ARG/ENV) so they aren't stored in image layers.
 RUN --mount=type=secret,id=supabase_url \
-    --mount=type=secret,id=supabase_key \
-    SUPABASE_URL="$(cat /run/secrets/supabase_url)" \
-    SUPABASE_KEY="$(cat /run/secrets/supabase_key)" \
-    sh -c 'cd /src && python train.py && cp model.pkl /app/model.pkl'
+  --mount=type=secret,id=supabase_key \
+  SUPABASE_URL="$(cat /run/secrets/supabase_url)" \
+  SUPABASE_KEY="$(cat /run/secrets/supabase_key)" \
+  sh -c 'cd /src && python train.py && cp model.pkl /app/model.pkl'
 
 # fetch_data.py enables headless Chrome when GITHUB_ACTIONS is set
 ENV GITHUB_ACTIONS=true
