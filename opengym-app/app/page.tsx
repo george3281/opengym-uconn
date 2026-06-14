@@ -33,31 +33,34 @@ export default function Home() {
       const idx = todayIdx()
       const sp = semesterProgress()
       const { weather, temperature } = await fetchWeather()
-      const [d0, d1, d2, d3] = await Promise.all([
+      const [d0, d1, d2, d3, d4] = await Promise.all([
         fetchDay(0, idx, sp, weather, temperature),
         fetchDay(1, idx, sp, weather, temperature),
         fetchDay(2, idx, sp, weather, temperature),
         fetchDay(3, idx, sp, weather, temperature),
+        fetchDay(4, idx, sp, weather, temperature),
       ])
       setToday(d0)
-      setHeatmap([[], d1, d2, d3])
+      setHeatmap([[], d1, d2, d3, d4])
     })().catch(() => setLive({ occupancy: 0, closed: false }))
   }, [])
 
+  const todayWithLive = useMemo(() => {
+    if (hour === null || !today.length || !live) return today
+    const slot: HourSlot = { hour, occupancy: live.occupancy, live: true }
+    return today.some((s) => s.hour === hour)
+      ? today.map((s) => (s.hour === hour ? slot : s))
+      : [...today, slot].sort((a, b) => a.hour - b.hour)
+  }, [today, hour, live])
+
   const hourlyDays = useMemo(() => {
-    if (hour === null || !today.length) return []
-    let hours = today.filter((s) => s.hour >= hour && s.hour <= 22)
-    if (live) {
-      const slot = { hour, occupancy: live.occupancy }
-      hours = hours.some((s) => s.hour === hour)
-        ? hours.map((s) => (s.hour === hour ? slot : s))
-        : [slot, ...hours].sort((a, b) => a.hour - b.hour)
-    }
+    if (hour === null || !todayWithLive.length) return []
+    const hours = todayWithLive.filter((s) => s.hour >= hour && s.hour <= 22)
     const days = [{ offset: 0, hours }]
     const tomorrow = heatmap[1]
     if (tomorrow?.length) days.push({ offset: 1, hours: tomorrow })
     return days
-  }, [today, heatmap, hour, live])
+  }, [todayWithLive, heatmap, hour])
 
   const openHours = today.filter((s) => s.hour >= 8 && s.hour <= 20)
   const peak = openHours.length ? Math.round(Math.max(...openHours.map((s) => s.occupancy)) * 100) : null
@@ -66,44 +69,47 @@ export default function Home() {
     : null
 
   return (
-    <main className="min-h-screen bg-[#0f0f0f] max-w-97.5 mx-auto pb-12">
-      {live === null ? (
-        <p className="text-gray-600 text-sm animate-pulse h-56 flex items-center justify-center">Loading...</p>
-      ) : (
-        <OccupancyHero occupancy={live.occupancy} closed={live.closed} />
-      )}
-
-      <div className="bg-zinc-900 rounded-2xl p-4 mx-3 mb-3">
-        {peak !== null && quietest ? (
-          <TodaySummary peak={peak} quietest={quietest} />
+    <main className="min-h-dvh w-full bg-[#0f0f0f]">
+      <div className="w-full max-w-100 mx-auto pb-12 px-[max(0.75rem,3vw)]">
+        {live === null ? (
+          <p className="text-gray-600 text-sm animate-pulse h-56 flex items-center justify-center">Loading...</p>
         ) : (
-          <p className="text-gray-600 text-sm animate-pulse mb-3">Loading...</p>
+          <OccupancyHero occupancy={live.occupancy} closed={live.closed} />
         )}
 
-        {hourlyDays.length > 0 && hour !== null && (
-          <HourlyForecast days={hourlyDays} hour={hour} />
-        )}
+        <div className="bg-zinc-900 rounded-2xl p-4 mb-3">
+          {peak !== null && quietest ? (
+            <TodaySummary peak={peak} quietest={quietest} />
+          ) : (
+            <p className="text-gray-600 text-sm animate-pulse mb-3">Loading...</p>
+          )}
 
-        {today.length > 0 && hour !== null && (
-          <Chart forecast={today} hour={hour} />
-        )}
+          {hourlyDays.length > 0 && hour !== null && (
+            <HourlyForecast days={hourlyDays} hour={hour} />
+          )}
+
+          {todayWithLive.length > 0 && hour !== null && (
+            <Chart forecast={todayWithLive} hour={hour} />
+          )}
+        </div>
+
+        <div className="bg-zinc-900 rounded-2xl p-4 mb-3">
+          <p className="text-white font-medium text-sm mb-1">What to Expect This Week</p>
+          <p className="text-[10px] text-gray-500 mb-3">Predicted occupancy for the next 4 days</p>
+          {heatmap.length > 0 ? (
+            <WeeklyHeatmap data={heatmap} />
+          ) : (
+            <p className="text-gray-600 text-sm animate-pulse">Loading...</p>
+          )}
+        </div>
+
+        <p className="text-xs text-gray-500 mt-6 text-center">
+          Created by{' '}
+          <a href="https://github.com/george3281" target="_blank" rel="noreferrer" className="hover:text-gray-400">
+            george3281
+          </a>
+        </p>
       </div>
-
-      <div className="bg-zinc-900 rounded-2xl p-4 mx-3 mb-3">
-        <p className="text-white font-medium text-sm mb-3">NEXT 3 DAYS</p>
-        {heatmap.length > 0 ? (
-          <WeeklyHeatmap data={heatmap} />
-        ) : (
-          <p className="text-gray-600 text-sm animate-pulse">Loading...</p>
-        )}
-      </div>
-
-      <p className="text-xs text-gray-500 mt-6 text-center">
-        Created by{' '}
-        <a href="https://github.com/george3281" target="_blank" rel="noreferrer" className="hover:text-gray-400">
-          george3281
-        </a>
-      </p>
     </main>
   )
 }

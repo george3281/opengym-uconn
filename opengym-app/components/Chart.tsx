@@ -15,28 +15,45 @@ export default function Chart({ forecast, hour }: { forecast: HourSlot[]; hour: 
     if (!canvas || !forecast.length) return
 
     chartRef.current?.destroy()
-    const nowIdx = forecast.findIndex((f) => f.hour === hour)
+    const liveIdx = forecast.findIndex((f) => f.hour === hour && f.live)
+    const predictedData = forecast.map((f, i) => (i === liveIdx ? null : Math.round(f.occupancy * 100)))
+    const liveData = forecast.map((f, i) => (i === liveIdx ? Math.round(f.occupancy * 100) : null))
 
     chartRef.current = new ChartJS(canvas, {
       type: 'line',
       data: {
         labels: forecast.map((f) => formatHour(f.hour)),
-        datasets: [{
-          data: forecast.map((f) => Math.round(f.occupancy * 100)),
-          borderColor: '#3b82f6',
-          borderWidth: 2,
-          fill: true,
-          backgroundColor: (ctx) => {
-            const { chartArea, ctx: c } = ctx.chart
-            if (!chartArea) return 'rgba(59,130,246,0.25)'
-            const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
-            g.addColorStop(0, 'rgba(59,130,246,0.25)')
-            g.addColorStop(1, 'rgba(59,130,246,0)')
-            return g
+        datasets: [
+          {
+            label: 'Predicted',
+            data: predictedData,
+            borderColor: '#3b82f6',
+            borderWidth: 2,
+            borderDash: [4, 4],
+            fill: true,
+            backgroundColor: (ctx) => {
+              const { chartArea, ctx: c } = ctx.chart
+              if (!chartArea) return 'rgba(59,130,246,0.15)'
+              const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+              g.addColorStop(0, 'rgba(59,130,246,0.15)')
+              g.addColorStop(1, 'rgba(59,130,246,0)')
+              return g
+            },
+            tension: 0.4,
+            pointRadius: 0,
+            spanGaps: true,
           },
-          tension: 0.4,
-          pointRadius: 0,
-        }],
+          {
+            label: 'Live',
+            data: liveData,
+            borderColor: '#d4d4d8',
+            borderWidth: 2,
+            backgroundColor: '#d4d4d8',
+            pointRadius: 2,
+            pointHoverRadius: 2,
+            showLine: false,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -57,23 +74,6 @@ export default function Chart({ forecast, hour }: { forecast: HourSlot[]; hour: 
           },
         },
       },
-      plugins: [{
-        id: 'nowLine',
-        afterDraw(chart) {
-          if (nowIdx < 0 || !chart.chartArea) return
-          const x = chart.scales.x.getPixelForValue(nowIdx)
-          const { ctx, chartArea } = chart
-          ctx.save()
-          ctx.strokeStyle = '#60a5fa'
-          ctx.lineWidth = 1
-          ctx.setLineDash([3, 3])
-          ctx.beginPath()
-          ctx.moveTo(x, chartArea.top)
-          ctx.lineTo(x, chartArea.bottom)
-          ctx.stroke()
-          ctx.restore()
-        },
-      }],
     })
 
     return () => {
@@ -82,9 +82,25 @@ export default function Chart({ forecast, hour }: { forecast: HourSlot[]; hour: 
     }
   }, [forecast, hour])
 
+  const hasLive = forecast.some((f) => f.hour === hour && f.live)
+
   return (
-    <div className="relative h-[110px] w-full mt-3 pt-3 border-t border-zinc-700">
-      <canvas ref={canvasRef} />
+    <div className="relative h-[130px] w-full mt-3 pt-3 border-t border-zinc-700 flex flex-col">
+      <div className="flex items-center gap-3 mb-2 shrink-0">
+        <div className="flex items-center gap-1">
+          <span className="w-2 border-t-1 border-dashed border-blue-500" />
+          <span className="text-[10px] text-gray-500">Predicted</span>
+        </div>
+        {hasLive && (
+          <div className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+            <span className="text-[10px] text-gray-500">Actual</span>
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-h-0">
+        <canvas ref={canvasRef} />
+      </div>
     </div>
   )
 }
