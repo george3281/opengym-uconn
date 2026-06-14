@@ -23,3 +23,8 @@ build/
 
 # os
 .DS_Store
+
+#aws
+ec2.md
+aws_key_pair.pem
+.tar
