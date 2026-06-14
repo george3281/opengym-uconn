@@ -1,16 +1,16 @@
 import { Fragment } from 'react'
 import { formatHour, occupancyColor, dayLabel, GYM_HOURS, HEAT_COLORS, type HourSlot } from '@/lib/api'
 
-const DAYS = [1, 2, 3]
+const DAYS = [1, 2, 3, 4]
 
 export default function WeeklyHeatmap({ data }: { data: HourSlot[][] }) {
   return (
     <div>
-      <div className="grid gap-1" style={{ gridTemplateColumns: '32px repeat(3, 1fr)' }}>
+      <div className="grid gap-1" style={{ gridTemplateColumns: '32px repeat(4, 1fr)' }}>
         <div />
         {DAYS.map((d) => (
           <p key={d} className="text-[10px] text-center pb-0.5 text-gray-600">
-            {dayLabel(d).slice(0, 3)}
+            {dayLabel(d).slice(0, 4)}
           </p>
         ))}
         {GYM_HOURS.map((h, i) => (

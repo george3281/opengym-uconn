@@ -3,7 +3,7 @@ const API = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000'
 export const GYM_HOURS = Array.from({ length: 17 }, (_, i) => i + 6)
 export const HEAT_COLORS = ['#27272a', 'rgba(249,115,22,0.38)', '#f97316', '#ef4444'] as const
 
-export type HourSlot = { hour: number; occupancy: number }
+export type HourSlot = { hour: number; occupancy: number; live?: boolean }
 export type DayForecast = { offset: number; hours: HourSlot[] }
 
 export function todayIdx() {
