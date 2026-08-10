@@ -1,4 +1,4 @@
-# opengym::uconn
+# opengym-uconn
 
 Predicts real-time occupancy at the UConn recreation center using a trained ML model, and shows both live and forecasted occupancy on a web dashboard.
 
