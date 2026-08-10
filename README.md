@@ -2,7 +2,7 @@
 
 Predicts real-time occupancy at the UConn recreation center using a trained ML model, and shows both live and forecasted occupancy on a web dashboard.
 
-**How it works:**
+## How it works
 
 1. **Scraper** — a scheduled GitHub Actions job (`.github/workflows/scrape.yml`, currently every 2 hours) runs `src/fetch_data.py`, which uses Selenium to read live occupancy % from the SafeSpace API, pulls current weather from Open-Meteo, and writes a row to Supabase (Postgres).
 2. **Training** — `src/train.py` pulls historical readings from Supabase and trains a `GradientBoostingRegressor` (scikit-learn) on cyclical encodings of hour-of-day and day-of-week, plus semester progress, weather condition, and temperature.
