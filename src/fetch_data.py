@@ -51,7 +51,8 @@ def save_reading():
         return None
 
     semester_progress = fetch_semester_progress(now)
-    on_break = semester_progress == -1
+    if semester_progress == -1:
+        return None
 
     occupancy = fetch_occupancy()
     if occupancy is None:
@@ -63,19 +64,15 @@ def save_reading():
         "recorded_at": now.isoformat(),
         "hour": now.hour,
         "day_of_week": now.weekday(),
+        "semester_progress": semester_progress,
         "weather": code,
         "temperature": temp,
         "occupancy": occupancy,
     }
-    if on_break:
-        table = "break_data"
-    else:
-        table = "rec_data"
-        row["semester_progress"] = semester_progress
 
     client = get_client()
     try:
-        result = client.table(table).insert(row).execute()
+        result = client.table("rec_data").insert(row).execute()
         return result
     except Exception as e:
         print(f"Failed to insert row: {e}")

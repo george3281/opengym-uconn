@@ -9,7 +9,7 @@ def fetch_training_data() -> pd.DataFrame:
     result = (
         client.table("rec_data")
         .select("hour, day_of_week, semester_progress, weather, temperature, occupancy")
-        .neq("semester_progress", -1)     # exclude summer/break readings
+        .neq("semester_progress", -1)
         .gte("occupancy", 0)
         .lte("occupancy", 1)
         .order("recorded_at", desc=False)
