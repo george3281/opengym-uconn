@@ -22,7 +22,8 @@ RUN --mount=type=secret,id=supabase_url \
   --mount=type=secret,id=supabase_key \
   SUPABASE_URL="$(cat /run/secrets/supabase_url)" \
   SUPABASE_KEY="$(cat /run/secrets/supabase_key)" \
-  sh -c 'cd /src && python train.py && cp model.pkl /app/model.pkl'
+  MODEL_PATH=/app/model.pkl \
+  python /src/train.py
 
 # fetch_data.py enables headless Chrome when GITHUB_ACTIONS is set
 ENV GITHUB_ACTIONS=true
