@@ -5,7 +5,7 @@ import sys
 import pandas as pd
 from pathlib import Path
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import mean_absolute_error
 import joblib
 
@@ -41,10 +41,14 @@ def train():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     model = GradientBoostingRegressor(n_estimators=100, max_depth=4, random_state=42)
+
+    cv_scores = -cross_val_score(model, X, y, cv=5, scoring='neg_mean_absolute_error')
+    print(f"5-fold CV MAE: {cv_scores.mean():.4f} +/- {cv_scores.std():.4f}")
+
     model.fit(X_train, y_train)
 
     mae = mean_absolute_error(y_test, model.predict(X_test))
-    print(f"MAE: {mae:.4f}")
+    print(f"Holdout MAE: {mae:.4f}")
 
     importances = pd.Series(model.feature_importances_, index=FEATURES)
     print(importances.sort_values(ascending=False))
