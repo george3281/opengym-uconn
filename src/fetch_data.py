@@ -55,7 +55,7 @@ def save_reading():
         return None
 
     occupancy = fetch_occupancy()
-    if occupancy is None:
+    if occupancy is None or 0:
         return None
 
     code, temp = fetch_weather()
